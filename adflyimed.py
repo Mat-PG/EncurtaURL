@@ -1,3 +1,4 @@
+import base64
 import pickle
 import os
 from math import floor
@@ -6,14 +7,20 @@ class Encurtador:
     def __init__(self):
         self.dic = {}
         self.nome_arq = "urls.dat"
-        self.__load_dic()
         self.indice = 1000 + len(self.dic)
+
+    def loadDic(self):
+        self.__load_dic()
 
     def __load_dic(self):
         if os.path.isfile(self.nome_arq):
             arq = open(self.nome_arq,"rb")
             self.dic = pickle.load(arq)
             arq.close()
+            self.indice = 1000 + len(self.dic)
+
+    def saveDic(self):
+        self.__save_dic()
 
     def __save_dic(self):
         arq = open(self.nome_arq, "wb")
@@ -42,16 +49,26 @@ class Encurtador:
         return res
 
     def encurtar(self, url):
-        tupla = (self.toBase(self.indice),url)
+        curto = e.toBase(self.indice)
+        if "www." in url:
+            i = 12
+            url_curta = ""
+            while url[i] != ".":
+                url_curta += url[i]
+                i += 1
+            url_curta += ".to/"+curto
+        else:
+            i = 8
+            url_curta = ""
+            while url[i] != ".":
+                url_curta += url[i]
+                i += 1
+            url_curta += ".to/"+curto
+        print("url ecurtada: "+url_curta)
+        tupla = (url_curta,url)
         self.dic[self.indice] = tupla
+        self.toBase(self.indice)
         self.indice = self.indice + 1
-        self.__save_dic()
-        
-        # salvar no dicionario usando como chave o valor da variavel self.indice
-        # o valor a ser salvo é uma tupla onde a posicao 0 eh o indice convertido
-        # para string usando base62 e a posicao 1 eh a url original
-        # nao esqueca de incrementar a variavel self.indice
-        # e por fim, chamar o metodo __save_dic para salvar o dicionario no arquivo em disco.
 
     def buscar(self, url_curta):
         indice = self.to10(url_curta)
@@ -59,11 +76,46 @@ class Encurtador:
 
     def listar_urls(self):
         print(self.dic)
-   
-## TESTES ##
-os.system('cls')
-e = Encurtador()
-e.encurtar("https://imed.edu.br/Ensino/ciencia-da-computacao/graduacao/sobre-a-profissao/")
-e.listar_urls()
 
-print(e.buscar('g8'))
+## TESTES ##
+e = Encurtador()
+while True:
+    print("")
+    print("--------------------------------------------------------------")
+    print("Escolha uma das opções: ")
+    print("Fechar programa [0]")
+    print("Carregar arquivo [1]")
+    print("Salvar tabela [2]")
+    print("Encurtar url [3]")
+    print("Mostrar tabela [4]")
+    try:
+        resposta = int(input())
+        os.system('cls')
+        if resposta == 0:
+            break
+        if resposta == 1:
+            e.loadDic()
+            print("-----Carregado-----")
+            os.system('cls')
+        if resposta == 2: 
+            e.saveDic()
+            print("------Salvo-----")
+        if resposta == 3:
+            print("")
+            url = str(input("Qual url deseja encurtar? "))
+            e.encurtar(url)
+            os.system('cls')
+        if resposta == 4: 
+            print("")
+            e.listar_urls()
+    except(ValueError):
+        os.system('cls')
+        print("Insira uma resposta válida!!!")
+    except(IndexError):
+        print("Insira uma url válida!!!")
+    except(EOFError):
+        print("Arquivo Vazio!!!")
+
+
+#https://www.vivaolinux.com.br/dica/Python-3.0-Gravando-dicionarios-em-arquivos/
+#https://imed.edu.br/Ensino/ciencia-da-computacao/graduacao/sobre-a-profissao/
